@@ -1,0 +1,6 @@
+include README.rst
+
+include setup.py
+include lifemodule.c
+
+recursive-include bin *
