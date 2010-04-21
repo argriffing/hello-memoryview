@@ -21,7 +21,7 @@ from distutils.core import setup
 from distutils.core import Extension
 import os
 
-life_version = '0.0.1'
+life_version = '0.0.2'
 
 
 scripts = [
@@ -46,8 +46,8 @@ classifiers = [
         'Topic :: Artistic Software']
 
 download_url = '/'.join([
-    'http://pypi.python.org/packages/source'
-    'h/hello-memoryview'
+    'http://pypi.python.org/packages/source',
+    'h/hello-memoryview',
     'hello-memoryview-' + life_version + '.tar.gz'])
 
 long_description = open('README.rst').read()
