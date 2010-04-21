@@ -21,7 +21,7 @@ from distutils.core import setup
 from distutils.core import Extension
 import os
 
-life_version = '0.0.2'
+life_version = '0.1.0'
 
 
 scripts = [
