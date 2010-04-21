@@ -7,12 +7,12 @@ static PyObject *LifeError;
 int do_one_generation(long *source, long *sink, int nrows, int ncols)
 {
   int row, col;
-  int dr, dc;
+  int index = 0;
   for (row=0; row<nrows; ++row) {
-    for (col=0; col<ncols; ++col) {
+    for (col=0; col<ncols; ++col, ++index) {
       /* get the source value and the number of neighbors for this position */
-      int index = row * ncols + col;
       int value = source[index];
+      int dr, dc;
       int nneighbors = 0;
       for (dr=-1; dr<2; ++dr) {
         for (dc=-1; dc<2; ++dc) {
@@ -29,8 +29,7 @@ int do_one_generation(long *source, long *sink, int nrows, int ncols)
             } else if (c == -1) {
               c = ncols -1;
             }
-            int neighbor_index = r * ncols + c;
-            nneighbors += source[neighbor_index];
+            nneighbors += source[r*ncols + c];
           }
         }
       }
@@ -51,6 +50,11 @@ static PyObject *
 step_python (PyObject *self, PyObject *args)
 {
   int except = 0;
+  /* buffer views */
+  Py_buffer source_view;
+  Py_buffer sink_view;
+  int got_source_view = 0;
+  int got_sink_view = 0;
   /* read the args */
   PyObject *obj_source;
   PyObject *obj_sink;
@@ -69,14 +73,16 @@ step_python (PyObject *self, PyObject *args)
     except = 1; goto end;
   }
   /* get the buffer view for each object */
-  Py_buffer source_view;
-  Py_buffer sink_view;
   int flags = PyBUF_ND | PyBUF_FORMAT | PyBUF_C_CONTIGUOUS | PyBUF_WRITABLE;
   if (PyObject_GetBuffer(obj_source, &source_view, flags) < 0) {
     except = 1; goto end;
+  } else {
+    got_source_view = 1;
   }
   if (PyObject_GetBuffer(obj_sink, &sink_view, flags) < 0) {
     except = 1; goto end;
+  } else {
+    got_sink_view = 1;
   }
   /* each buffer should be two dimensional */
   if (source_view.ndim != 2) {
@@ -118,6 +124,14 @@ step_python (PyObject *self, PyObject *args)
   /* do a generation of conway life */
   do_one_generation(source_view.buf, sink_view.buf, nrows, ncols);
 end:
+  /* clean up the buffer views */
+  if (got_source_view) {
+    PyBuffer_Release(&source_view);
+  }
+  if (got_sink_view) {
+    PyBuffer_Release(&sink_view);
+  }
+  /* return an appropriate value */
   if (except) {
     return NULL;
   } else {
